@@ -56,6 +56,29 @@ class PostController {
       post
     })
   }
+
+  async update({ params, request, response, session }) {
+    const validation = await validate(request.all(), {
+      title: 'required|min:3|max:255',
+      body: 'required|min:3'
+    })
+
+    if (validation.fails()) {
+      session.withErrors(validation.messages()).flashAll()
+      return response.redirect('back') // reload the current page (the form)
+    }
+
+    const post = await Post.find(params.id)
+
+    post.title = request.input('title')
+    post.body = request.input('body')
+
+    await post.save()
+
+    session.flash({ notificaiton: 'Post updated successfully!' })
+
+    return response.redirect('/posts')
+  }
 }
 
 module.exports = PostController
