@@ -2,6 +2,8 @@
 
 const Post = use('App/Models/Post')
 
+const { validate } = use('Validator')
+
 class PostController {
   async index({ view }) {
     const posts = await Post.all();
@@ -25,6 +27,16 @@ class PostController {
   }
 
   async store({ request, response, session }) {
+    const validation = await validate(request.all(), {
+      title: 'required|min:3|max:255',
+      body: 'required|min:3'
+    })
+
+    if (validation.fails()) {
+      session.withErrors(validation.messages()).flashAll()
+      return response.redirect('back') // reload the current page (the form)
+    }
+
     const post = new Post();
 
     post.title = request.input('title');
